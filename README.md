@@ -1,0 +1,2 @@
+# Evaluating-Bus-Franchising-Policy-In-Greater-Manchester
+This is a paper written in the second year of my BSc Economics course for the module ESPS0015 Political Economy. It uses standard DiD methods (mainly TWFE DiD) to evaluate the efficacy of Bunham's bus frranchising policy on the no. bus journeys taken in GM. The analysis is then extended by using synthetic control method to ask the same question.
