@@ -3,6 +3,7 @@
 ##install.packages("skimr")
 ##install.packages("dplyr")
 ##install.packages("stringr")
+##install.packages("readxl")
 
 pacman::p_load(
   tidyverse,
@@ -10,6 +11,7 @@ pacman::p_load(
   readODS,
   dplyr,
   stringr,
+  readxl
 )
 
 ##**WRANGLING THE BUS JOURNEY DATA**
@@ -74,7 +76,7 @@ PrivateCars <- PrivateCars[order(PrivateCars$`ONS Geography`), ] ##Sorts the dat
 PrivateCars$`Private cars licensed in each region in each year` <- as.numeric(PrivateCars$`Private cars licensed in each region in each year`) ##Transforms the car ownership data from characters into numbers
 #View(PrivateCars) ## Lets us view the tidied private cars dataframe
 
-##COMBINING AND MATCHING BUS JOURNEY AND CAR OWNERSHIP DATA
+##**COMBINING AND MATCHING BUS JOURNEY AND CAR OWNERSHIP DATA**
 PrivateCars <- PrivateCars[order(PrivateCars$`ONS Code`), ] ##Sorts the private car data alphabetically by ONS Code
 BusJourneys <- BusJourneys[order(BusJourneys$`Local Authority (LA) Code`), ] ##Sorts the bus journey data alphabetically by OLS code
 BusJourneys <- BusJourneys %>%
@@ -129,7 +131,8 @@ PrivateCars_list_Northamptonshire <- list(PrivateCars, PrivateCars_Northamptonsh
 PrivateCars <- PrivateCars_list_Northamptonshire %>% reduce(full_join) ##Combines the list into a completed dataframe so that the Northamptonshire data is included into the PrivateCars data 
 PrivateCars <- PrivateCars %>%
   dplyr::filter(`ONS Geography` != "North Northamptonshire" & `ONS Geography` != "West Northamptonshire") ##Filters out North Northamptonshire and West Northamptonshire - these have now been replaced by Northamptonshire.
-##Now to combine West Northamptonshire and North Northamptonshire together for the bus journeys data. This will be slightly more complicated, as only the last four years of data are split into North Northamptonshire and West Northamptonshire. I want to combine these into a 'New' Northamptonshire datapoint, then combine the two. 
+
+#=> Now to combine West Northamptonshire and North Northamptonshire together for the bus journeys data. This will be slightly more complicated, as only the last four years of data are split into North Northamptonshire and West Northamptonshire. I want to combine these into a 'New' Northamptonshire datapoint, then combine the two. 
 BusJourneys_OldNorthamptonshire <- BusJourneys %>%
   dplyr::filter(`LA or Region` == "Northamptonshire") ##Creating a dataframe with all the 'old' Northamptonshire datapoints, which we will later combine with the 'new' Northamptonshire datapoints.
 BJ_LA_Code_Northamptonshire <- c("E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021")
@@ -164,7 +167,7 @@ BusJourneys <- BusJourneys[1:1408, ] ##Resizes the bus journey dataframe to be t
 PrivateCars <- PrivateCars[1:1408, ] ##Resizes the car ownership dataframe to be the same size as the bus journey dataframe
 BusJourneys_PrivateCars <- data.frame(BusJourneys, PrivateCars) ##Creates a new dataframe which is just the two main dataframes stitched together horizontally
 BusJourneys_PrivateCars <- BusJourneys_PrivateCars[ , -c(5:7)] ##Removes redundant/repeated columns from this dataframe
-View(BusJourneys_PrivateCars) ##Lets us view this new stitched together dataframe
+#View(BusJourneys_PrivateCars) ##Lets us view this new stitched together dataframe
 
 ##**WRANGLING THE TRAM/LIGHT RAIL DATA**
 if (file.exists('Sources of data/light-rail-and-tram-statistics-year-ending-march-2025') == FALSE) {
@@ -192,6 +195,7 @@ TramJourneys[TramJourneys=="Sheffield Supertram"]<-"South Yorkshire CA"
 TramJourneys[TramJourneys=="Tyne and Wear Metro"]<-"Tyne and Wear CA"
 TramJourneys[TramJourneys=="West Midlands Metro [note 1][note 2][note 4]"]<-"West Midlands CA" ##Aligns the location of the public transport with the local/combined authority names
 TramJourneys$`Journeys on light rail/trams per year` <- as.numeric(TramJourneys$`Journeys on light rail/trams per year`) ##Transforms the tram journey data from characters into numbers
+
 #=> Blackpool tram is split across Blackpool LA and Lancashire county with (ROUGHLY!) 75% of journeys in Blackpool LA and 25% in Lancashire county. So, we need to split it accordingly. 
 TramJourneys_Blackpool <- TramJourneys %>%
   dplyr::filter(`LA or Region`== "Blackpool Tramway") ##Filters the TramJourneys dataframe for only the Blackpool Tramway information
@@ -212,6 +216,7 @@ TramJourneys_TyneWear <- TramJourneys %>%
   dplyr::filter(`LA or Region`== "Tyne and Wear CA")
 TramJourneys_West_Midlands <- TramJourneys %>%
   dplyr::filter(`LA or Region`== "West Midlands CA") ##Creates 5 more dataframes split up as required
+
 #=> I now want to prepare each dataframe for merging with the master dataframe. I start with Blackpool LA then move onto the rest of the regions
 BusJourneys_PrivateCars_Blackpool <- BusJourneys_PrivateCars %>%
   dplyr::filter(`LA.or.Region` == "Blackpool") ##Creates a dataframe from the master dataframe, but only for Blackpool LA's entries
@@ -235,6 +240,217 @@ BusJourneys_PrivateCars_West_Midlands <- BusJourneys_PrivateCars %>%
   dplyr::filter(`LA.or.Region` == "West Midlands CA") ##Creates a dataframe from the master dataframe, but only for West Midlands CA's entries
 BusJourneys_PrivateCars_TramJourneys_West_Midlands <- data.frame(BusJourneys_PrivateCars_West_Midlands, TramJourneys_West_Midlands) ##Now we have a dataframe for Tyne and Wear CA with all the information so far
 
-View(TramJourneys)
+#=> I now want to add columns to the BusJourneys_PrivateCars 'master' dataframe to align it with these new broken up dataframes, so they can be added in seamlessly. 
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars %>%
+  mutate(LA.or.Region1 = 0) ##Creates a new 'master' dataframe with a column of zeros named "LA.or.Region1" to align with the broken up tram dataframes
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys %>%
+  mutate(Year.ending.March = "0")
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys %>%
+  mutate(Journeys.on.light.rail.trams.per.year = 0) ##Does the same for the other two important columns
+BusJourneys_PrivateCars_TramJourneys$`Journeys.on.light.rail.trams.per.year` <- as.numeric(BusJourneys_PrivateCars_TramJourneys$`Journeys.on.light.rail.trams.per.year`) ##Makes sure the zero column for the tram journey data is numerical and not strings
 
-##NEXT NEED TO: CHECK THE ABOVE DATAFRAMES ARE RIGHT, ADD IN COLUMNS TO THE MASTER DATAFRAME AND SET THEM ALL TO ZERO FOR EVERY ENTRY, THEN REMOVE THE OLD ENTRIES AND ADD THE NEW ENTRIES IN VIA THE ABOVE DATAFRAMES
+#=> Now to delete the entries in the master dataframe which are about to be overwritten by the new data, and add the new data in
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`LA.or.Region` != "Blackpool" & `LA.or.Region` != "Greater Manchester CA" & `LA.or.Region` != "Lancashire" & `LA.or.Region` != "Nottingham" & `LA.or.Region` != "South Yorkshire CA" & `LA.or.Region` != "Tyne and Wear CA" & `LA.or.Region` != "West Midlands CA") ##Filters out the regions we don't want in the dataframe as we're going to replace them
+BusJourneys_PrivateCars_TramJourneys_Blackpool_list <- list(BusJourneys_PrivateCars_TramJourneys, BusJourneys_PrivateCars_TramJourneys_Blackpool) ##Creates a list of the main dataframe and the dataframe containing all information for Blackpool
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys_Blackpool_list %>% reduce(full_join) ##Combines the list into a new dataframe, so the Blackpool information is included
+BusJourneys_PrivateCars_TramJourneys_Greater_Manchester_list <- list(BusJourneys_PrivateCars_TramJourneys, BusJourneys_PrivateCars_TramJourneys_Greater_Manchester) 
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys_Greater_Manchester_list %>% reduce(full_join)
+BusJourneys_PrivateCars_TramJourneys_Lancashire_list <- list(BusJourneys_PrivateCars_TramJourneys, BusJourneys_PrivateCars_TramJourneys_Lancashire) 
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys_Lancashire_list %>% reduce(full_join)
+BusJourneys_PrivateCars_TramJourneys_Nottingham_list <- list(BusJourneys_PrivateCars_TramJourneys, BusJourneys_PrivateCars_TramJourneys_Nottingham) 
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys_Nottingham_list %>% reduce(full_join)
+BusJourneys_PrivateCars_TramJourneys_South_Yorkshire_list <- list(BusJourneys_PrivateCars_TramJourneys, BusJourneys_PrivateCars_TramJourneys_South_Yorkshire) 
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys_South_Yorkshire_list %>% reduce(full_join)
+BusJourneys_PrivateCars_TramJourneys_TyneWear_list <- list(BusJourneys_PrivateCars_TramJourneys, BusJourneys_PrivateCars_TramJourneys_TyneWear) 
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys_TyneWear_list %>% reduce(full_join)
+BusJourneys_PrivateCars_TramJourneys_West_Midlands_list <- list(BusJourneys_PrivateCars_TramJourneys, BusJourneys_PrivateCars_TramJourneys_West_Midlands) 
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys_West_Midlands_list %>% reduce(full_join) ##Does this process for each of the 7 regions with tram/light rail, so we now have the master list all in one. 
+
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys[ , c(1:5, 8)] ##Deletes the columns we don't want/need
+BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys[order(BusJourneys_PrivateCars_TramJourneys$`LA.or.Region`), ] ##Sorts the data alphabetically by name of local/combined authority
+rownames(BusJourneys_PrivateCars_TramJourneys) <- 1:nrow(BusJourneys_PrivateCars_TramJourneys) ##Resets the row names
+View(BusJourneys_PrivateCars_TramJourneys)
+
+##**WRANGLING THE REAL MEDIAN INCOME DATA**
+#=> Starting with the 2010 data, I want to unify the local authorities included with the ones in my main dataframe. This will be the first step. 
+if (file.exists('Sources of data/Income data/2010-revised-table-8') == FALSE) {
+  zip.file <- "Sources of data/Income data/2010-revised-table-8.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/2010-revised-table-8")
+} ##This code is automatically only run the first time the programme is run. It looks for whether the 2010 income data has been unzipped, and if it hasn't, unzips it.
+MedPay_2010 = read_excel("Sources of data/Income data/2010-revised-table-8/REVISED - Home Geography Table 8.7a   Annual pay - Gross 2010.xls", sheet = 1) ##Creates a dataframe from the 2010 median pay data
+MedPay_2010 <- MedPay_2010[4:417, ] ##Deletes the first 3 rows from the table and the Wales/Scotland data t
+colnames(MedPay_2010) <- MedPay_2010[1, ] ##Renames the columns to the correct titles
+MedPay_2010 <- MedPay_2010[6:414, ] ##Gets rid of a few more rows we don't want
+MedPay_2010 <- MedPay_2010[, c(1,2,4)] ##Filters only for columns we want
+MedPay_2010$`Code` <- as.numeric(MedPay_2010$`Code`) ##Transforms the code from characters into numbers so we can filter based on their size
+MedPay_2010$`Median` <- as.numeric(MedPay_2010$`Median`) ##Transforms the median pay from characters into numbers for later
+
+#=> I want to get rid of lots of the entries included in these median pay data, the data are more granular than we want
+MedPay_2010 <- MedPay_2010 %>%
+  dplyr::filter(`Code` <= 199 | `Code` >= 600) ##Filters out more of the units we don't want. The rows we want all have codes smaller than 199 and larger than 600.
+MedPay_2010 <- MedPay_2010[-(57:91), ] ##Gets rid of the London regions, we don't want these
+MedPay_2010 <- MedPay_2010[order(MedPay_2010$`Description`), ] ##Sorts the data alphabetically by name of local/combined authority
+BusJourneys_PrivateCars_TramJourneys_2010 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2010) ##Creates a new dataframe from the master dataframe, only containing 2010 entries
+
+#=> I am now going to align the units included in the median pay data with the units in the main dataframe by adding and removing units where applicable
+MedPay_2010 <- MedPay_2010 %>%
+  dplyr::filter(`Description` != "Bedfordshire" & `Description` != "Cheshire") ##Removes Cheshire and Bedfordshire from the sample. These are just collections of Cheshire East/Cheshire West and Chester, and Bedford and Central Bedfordshire respectively, so they aren't needed.
+MedPay_2010[MedPay_2010=="County Durham"]<-"Durham" ##Renames County Durham to Durham in the pay data to make sure it's aligned
+MedPay_2010 <- MedPay_2010 %>% add_row(Description='Isles of Scilly', Code=NA, Median=NA) ##Adds the Isles of Scilly into the sample for completion's sake
+#=> The median pay data includes Bournemouth and Poole separately. I am going to combine them to align with what we have above. The number of jobs is comparable between the two locations, so I am just going to take an average as an approximation
+MedPay_2010_Bournemouth <- MedPay_2010 %>%
+  dplyr::filter(`Description` == "Bournemouth UA") ##This isolates the Bournemouth row of data
+MedPay_2010_Bournemouth <- MedPay_2010_Bournemouth[ , c(3)] ##This isolates just the median salary for Bournemouth
+MedPay_2010_Poole <- MedPay_2010 %>%
+  dplyr::filter(`Description` == "Poole UA") 
+MedPay_2010_Poole <- MedPay_2010_Poole[ , c(3)] ##This does the same for Poole
+MedPay_2010_BournemouthPoole = (MedPay_2010_Bournemouth + MedPay_2010_Poole)/2
+MedPay_2010 <- MedPay_2010 %>%
+  dplyr::filter(`Description` != "Bournemouth UA" & `Description` != "Poole UA")  ##Filters out the Bournemouth and Poole entries prior to them being re-added
+MedPay_2010 <- MedPay_2010 %>% add_row(Description='Bournemouth and Poole', Code=51, Median=MedPay_2010_BournemouthPoole[1,1]) ##Adds in the new Bournemouth/Poole combined entry
+
+#=> These few lines of code here allow me to cross-check the units of each dataframe by stitching them together and viewing them. I then go through and tweak them until the units (regions/LAs/CAs) are unified between the dataframes
+MedPay_2010 <- MedPay_2010[order(MedPay_2010$`Description`), ] ##Sorts the data alphabetically by name of local/combined authority
+MedPay_2010 <- MedPay_2010[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2010 <- BusJourneys_PrivateCars_TramJourneys_2010[1:100, ] ##Makes the size of the dataframes equal
+BusJourneys_PrivateCars_TramJourneys_MedPay_2010 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2010, MedPay_2010) ##Stitches the dataframes together horizontally so I can cross-check them
+BusJourneys_PrivateCars_TramJourneys_MedPay_2010 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2010[1:88, ] ##Gets rid of the excess rows at the end
+BusJourneys_PrivateCars_TramJourneys_MedPay_2010 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2010[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2010)
+
+#=> Now I want to do the same thing for the years 2011-2025 following the same process. I start with 2011. If a bit of doesn't have a '## description' to the right, that's because it's doing the same as the above for the 2010 data
+if (file.exists('Sources of data/Income data/2011-provisional-table-8') == FALSE) {
+  zip.file <- "Sources of data/Income data/2011-provisional-table-8.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/2011-provisional-table-8")
+}
+MedPay_2011 = read_excel("Sources of data/Income data/2011-provisional-table-8/REVISED - Home Geography Table 8.7a   Annual pay - Gross 2011.xls", sheet = 1)
+MedPay_2011 <- MedPay_2011[4:378, ] ##Gets rid of Scottish and Welsh data, and the first few rows which aren't needed
+colnames(MedPay_2011) <- MedPay_2011[1, ] 
+MedPay_2011 <- MedPay_2011[6:375, ] 
+MedPay_2011 <- MedPay_2011[, c(1,2,4)] 
+MedPay_2011$`Code` <- as.numeric(MedPay_2011$`Code`) 
+MedPay_2011$`Median` <- as.numeric(MedPay_2011$`Median`) 
+MedPay_2011 <- MedPay_2011 %>%
+  dplyr::filter(`Code` <= 199 | `Code` >= 600) 
+MedPay_2011 <- MedPay_2011[-(55:89), ] ##Gets rid of the London rows
+MedPay_2011 <- MedPay_2011[order(MedPay_2011$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2011 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2011) 
+
+MedPay_2011_Bournemouth <- MedPay_2011 %>%
+  dplyr::filter(`Description` == "Bournemouth UA") 
+MedPay_2011_Bournemouth <- MedPay_2011_Bournemouth[ , c(3)] 
+MedPay_2011_Poole <- MedPay_2011 %>%
+  dplyr::filter(`Description` == "Poole UA") 
+MedPay_2011_Poole <- MedPay_2011_Poole[ , c(3)] 
+MedPay_2011_BournemouthPoole = (MedPay_2011_Bournemouth + MedPay_2011_Poole)/2
+MedPay_2011 <- MedPay_2011 %>%
+  dplyr::filter(`Description` != "Bournemouth UA" & `Description` != "Poole UA")  
+MedPay_2011 <- MedPay_2011 %>% add_row(Description='Bournemouth and Poole', Code=51, Median=MedPay_2011_BournemouthPoole[1,1]) 
+
+MedPay_2011[MedPay_2011=="County Durham UA"]<-"Durham"
+MedPay_2011 <- MedPay_2011 %>% add_row(Description='Isles of Scilly', Code=NA, Median=NA)
+
+MedPay_2011 <- MedPay_2011[order(MedPay_2011$`Description`), ] 
+MedPay_2011 <- MedPay_2011[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2011 <- BusJourneys_PrivateCars_TramJourneys_2011[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2011 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2011, MedPay_2011) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2011 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2011[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2011 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2011[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2011)
+
+#=> Now for 2012's income data
+if (file.exists('Sources of data/Income data/2012-revised-table-8') == FALSE) {
+  zip.file <- "Sources of data/Income data/2012-revised-table-8.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/2012-revised-table-8")
+}
+MedPay_2012 = read_excel("Sources of data/Income data/2012-revised-table-8/Home Geography Table 8.7a   Annual pay - Gross 2012.xls", sheet = 1)
+MedPay_2012 <- MedPay_2012[4:378, ]
+colnames(MedPay_2012) <- MedPay_2012[1, ] 
+MedPay_2012 <- MedPay_2012[6:375, ] 
+MedPay_2012 <- MedPay_2012[, c(1,2,4)] 
+MedPay_2012$`Median` <- as.numeric(MedPay_2012$`Median`) 
+MedPay_2012_E06 <- MedPay_2012 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2012_E10 <- MedPay_2012 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2012_E11 <- MedPay_2012 %>%
+  filter(str_detect(`Code`, "^E11")) ##Creates three dataframes, one filtering median pay data for regions with code starting E06, and ones for E10 and E11. 
+MedPay_2012_list <- list(MedPay_2012_E06, MedPay_2012_E10, MedPay_2012_E11) ##Creates a list of the three created dataframes
+MedPay_2012 <- MedPay_2012_list %>% reduce(full_join) ##Combines the list of the three created dataframes and then overwrites this onto the MedPay_2012 dataframe
+MedPay_2012 <- MedPay_2012[order(MedPay_2012$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2012 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2012) 
+
+MedPay_2012_Bournemouth <- MedPay_2012 %>%
+  dplyr::filter(`Description` == "Bournemouth UA") 
+MedPay_2012_Bournemouth <- MedPay_2012_Bournemouth[ , c(3)] 
+MedPay_2012_Poole <- MedPay_2012 %>%
+  dplyr::filter(`Description` == "Poole UA") 
+MedPay_2012_Poole <- MedPay_2012_Poole[ , c(3)] 
+MedPay_2012_BournemouthPoole = (MedPay_2012_Bournemouth + MedPay_2012_Poole)/2
+MedPay_2012 <- MedPay_2012 %>%
+  dplyr::filter(`Description` != "Bournemouth UA" & `Description` != "Poole UA")  
+MedPay_2012 <- MedPay_2012 %>% add_row(Description='Bournemouth and Poole', Code="E06000028", Median=MedPay_2012_BournemouthPoole[1,1]) 
+
+MedPay_2012[MedPay_2012=="County Durham UA"]<-"Durham"
+
+MedPay_2012 <- MedPay_2012[order(MedPay_2012$`Description`), ] 
+MedPay_2012 <- MedPay_2012[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2012 <- BusJourneys_PrivateCars_TramJourneys_2012[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2012 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2012, MedPay_2012) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2012 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2012[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2012 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2012[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2012)
+
+#=> Now for 2013's income data
+if (file.exists('Sources of data/Income data/2013-revised-table-8') == FALSE) {
+  zip.file <- "Sources of data/Income data/2013-revised-table-8.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/2013-revised-table-8")
+}
+MedPay_2013 = read_excel("Sources of data/Income data/2013-revised-table-8/Home Geography Table 8.7a   Annual pay - Gross 2013.xls", sheet = 2) ##Creates a dataframe equal to the 2nd sheet of the pay data
+MedPay_2013 <- MedPay_2013[4:378, ]
+colnames(MedPay_2013) <- MedPay_2013[1, ] 
+MedPay_2013 <- MedPay_2013[6:375, ] 
+MedPay_2013 <- MedPay_2013[, c(1,2,4)] 
+MedPay_2013$`Median` <- as.numeric(MedPay_2013$`Median`) 
+MedPay_2013_E06 <- MedPay_2013 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2013_E10 <- MedPay_2013 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2013_E11 <- MedPay_2013 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2013_list <- list(MedPay_2013_E06, MedPay_2013_E10, MedPay_2013_E11) 
+MedPay_2013 <- MedPay_2013_list %>% reduce(full_join)
+MedPay_2013 <- MedPay_2013[order(MedPay_2013$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2013 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2013)
+
+MedPay_2013_Bournemouth <- MedPay_2013 %>%
+  dplyr::filter(`Description` == "Bournemouth UA") 
+MedPay_2013_Bournemouth <- MedPay_2013_Bournemouth[ , c(3)] 
+MedPay_2013_Poole <- MedPay_2013 %>%
+  dplyr::filter(`Description` == "Poole UA") 
+MedPay_2013_Poole <- MedPay_2013_Poole[ , c(3)] 
+MedPay_2013_BournemouthPoole = (MedPay_2013_Bournemouth + MedPay_2013_Poole)/2
+MedPay_2013 <- MedPay_2013 %>%
+  dplyr::filter(`Description` != "Bournemouth UA" & `Description` != "Poole UA")  
+MedPay_2013 <- MedPay_2013 %>% add_row(Description='Bournemouth and Poole', Code="E06000028", Median=MedPay_2013_BournemouthPoole[1,1]) 
+
+MedPay_2013[MedPay_2013=="County Durham UA"]<-"Durham"
+
+MedPay_2013 <- MedPay_2013[order(MedPay_2013$`Description`), ] 
+MedPay_2013 <- MedPay_2013[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2013 <- BusJourneys_PrivateCars_TramJourneys_2013[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2013 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2013, MedPay_2013) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2013 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2013[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2013 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2013[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2013)
+
+#=> Now for 2014's income data
+if (file.exists('Sources of data/Income data/rft-8(1)') == FALSE) {
+  zip.file <- "Sources of data/Income data/rft-8(1).zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/rft-8(1)")
+}
