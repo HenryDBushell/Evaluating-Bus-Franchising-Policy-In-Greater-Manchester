@@ -454,3 +454,87 @@ if (file.exists('Sources of data/Income data/rft-8(1)') == FALSE) {
   zip.file <- "Sources of data/Income data/rft-8(1).zip"
   unzip(zip.file, exdir = "Sources of data/Income data/rft-8(1)")
 }
+MedPay_2014 = read_excel("Sources of data/Income data/rft-8(1)/Home Geography Table 8.7a   Annual pay - Gross 2014.xls", sheet = 2) 
+MedPay_2014 <- MedPay_2014[4:378, ]
+colnames(MedPay_2014) <- MedPay_2014[1, ] 
+MedPay_2014 <- MedPay_2014[6:375, ] 
+MedPay_2014 <- MedPay_2014[, c(1,2,4)] 
+MedPay_2014$`Median` <- as.numeric(MedPay_2014$`Median`)
+MedPay_2014_E06 <- MedPay_2014 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2014_E10 <- MedPay_2014 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2014_E11 <- MedPay_2014 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2014_list <- list(MedPay_2014_E06, MedPay_2014_E10, MedPay_2014_E11) 
+MedPay_2014 <- MedPay_2014_list %>% reduce(full_join)
+MedPay_2014 <- MedPay_2014[order(MedPay_2014$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2014 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2014)
+
+MedPay_2014_Bournemouth <- MedPay_2014 %>%
+  dplyr::filter(`Description` == "Bournemouth UA") 
+MedPay_2014_Bournemouth <- MedPay_2014_Bournemouth[ , c(3)] 
+MedPay_2014_Poole <- MedPay_2014 %>%
+  dplyr::filter(`Description` == "Poole UA") 
+MedPay_2014_Poole <- MedPay_2014_Poole[ , c(3)] 
+MedPay_2014_BournemouthPoole = (MedPay_2014_Bournemouth + MedPay_2014_Poole)/2
+MedPay_2014 <- MedPay_2014 %>%
+  dplyr::filter(`Description` != "Bournemouth UA" & `Description` != "Poole UA")  
+MedPay_2014 <- MedPay_2014 %>% add_row(Description='Bournemouth and Poole', Code="E06000028", Median=MedPay_2014_BournemouthPoole[1,1]) 
+
+MedPay_2014[MedPay_2014=="County Durham UA"]<-"Durham"
+
+MedPay_2014 <- MedPay_2014[order(MedPay_2014$`Description`), ] 
+MedPay_2014 <- MedPay_2014[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2014 <- BusJourneys_PrivateCars_TramJourneys_2014[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2014 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2014, MedPay_2014) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2014 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2014[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2014 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2014[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2014)
+
+#=> Now for 2015's income data
+if (file.exists('Sources of data/Income data/table82015revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/table82015revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/table82015revised")
+}
+MedPay_2015 = read_excel("Sources of data/Income data/table82015revised/Home Geography Table 8.7a   Annual pay - Gross 2015.xls", sheet = 2) 
+MedPay_2015 <- MedPay_2015[4:378, ]
+colnames(MedPay_2015) <- MedPay_2015[1, ] 
+MedPay_2015 <- MedPay_2015[6:375, ] 
+MedPay_2015 <- MedPay_2015[, c(1,2,4)] 
+MedPay_2015$`Median` <- as.numeric(MedPay_2015$`Median`)
+MedPay_2015_E06 <- MedPay_2015 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2015_E10 <- MedPay_2015 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2015_E11 <- MedPay_2015 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2015_list <- list(MedPay_2015_E06, MedPay_2015_E10, MedPay_2015_E11) 
+MedPay_2015 <- MedPay_2015_list %>% reduce(full_join)
+MedPay_2015 <- MedPay_2015[order(MedPay_2015$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2015 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2015)
+
+MedPay_2015_Bournemouth <- MedPay_2015 %>%
+  dplyr::filter(`Description` == "Bournemouth UA") 
+MedPay_2015_Bournemouth <- MedPay_2015_Bournemouth[ , c(3)] 
+MedPay_2015_Poole <- MedPay_2015 %>%
+  dplyr::filter(`Description` == "Poole UA") 
+MedPay_2015_Poole <- MedPay_2015_Poole[ , c(3)] 
+MedPay_2015_BournemouthPoole = (MedPay_2015_Bournemouth + MedPay_2015_Poole)/2
+MedPay_2015 <- MedPay_2015 %>%
+  dplyr::filter(`Description` != "Bournemouth UA" & `Description` != "Poole UA")  
+MedPay_2015 <- MedPay_2015 %>% add_row(Description='Bournemouth and Poole', Code="E06000028", Median=MedPay_2015_BournemouthPoole[1,1]) 
+
+MedPay_2015[MedPay_2015=="County Durham UA"]<-"Durham"
+
+MedPay_2015 <- MedPay_2015[order(MedPay_2015$`Description`), ] 
+MedPay_2015 <- MedPay_2015[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2015 <- BusJourneys_PrivateCars_TramJourneys_2015[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2015 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2015, MedPay_2015) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2015 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2015[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2015 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2015[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2015)
+
+#=> Now for 2016's income data
