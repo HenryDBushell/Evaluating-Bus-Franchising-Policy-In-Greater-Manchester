@@ -50,6 +50,9 @@ PrivateCarsE11 <- PrivateCars %>%
 PrivateCars_list <- list(PrivateCarsE06, PrivateCarsE10, PrivateCarsE11) ##Creates a list of the three created dataframes
 PrivateCars <- PrivateCars_list %>% reduce(full_join) ##Combines the list of the three created dataframes and then overwrites this onto the PrivateCars dataframe
 PrivateCars <- PrivateCars[ ,c(6, 7, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72)] ##Selects for only the columns we want in the dataset (we only want the Q1s in the dataset. The bus data is 'year ending March 20xx' so we take Q1 values to match dates)
+#for (i in 2010:2025){
+#  PrivateCars <- PrivateCars %>% rename(`i` = `i Q1`)
+#}
 PrivateCars <- PrivateCars %>% rename(`2025` = `2025 Q1`)
 PrivateCars <- PrivateCars %>% rename(`2024` = `2024 Q1`)
 PrivateCars <- PrivateCars %>% rename(`2023` = `2023 Q1`)
@@ -1007,6 +1010,60 @@ BusJourneys_PrivateCars_TramJourneys_MedPay <- BusJourneys_PrivateCars_TramJourn
 BusJourneys_PrivateCars_TramJourneys_MedPay <- BusJourneys_PrivateCars_TramJourneys_MedPay[order(BusJourneys_PrivateCars_TramJourneys_MedPay$`LA.or.Region`), ] ##Orders the data in alphabetical order once again 
 rownames(BusJourneys_PrivateCars_TramJourneys_MedPay) <- 1:nrow(BusJourneys_PrivateCars_TramJourneys_MedPay) ##Resets the row names
 colnames(BusJourneys_PrivateCars_TramJourneys_MedPay)[colnames(BusJourneys_PrivateCars_TramJourneys_MedPay) == "Median"] <- "Nominal.median.pay.in.each.region" ##Renames the column names to the first row of the data, which is the title row
-View(BusJourneys_PrivateCars_TramJourneys_MedPay)
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay)
 
+##**CONVERTING NOMINAL WAGES INTO REAL WAGES AND ADDING INTO THE MASTER DATAFRAME**
+Infl = read.csv("Sources of data/series-190826.csv") ##Reads the inflation data into R
+Infl <- Infl[29:44, ] ##Filters for only the rows of data we're interested in
+Infl$`CPI.ANNUAL.RATE.00..ALL.ITEMS.2015.100` <- as.numeric(Infl$`CPI.ANNUAL.RATE.00..ALL.ITEMS.2015.100`) ##Converts inflation numbers into numerics
+rownames(Infl) <- 1:nrow(Infl) ##Resets the row names
+Infl[ , c(2)] <- 100+Infl[ ,c(2)] ##Setting up the inflation index
+Infl[1, c(2)] <- 100 ##Setting 2010 = 100 for the index
+Infl[ , c(2)] <- Infl[ ,c(2)]/100 ##Turning percentage into proportion
+for (i in 2:16){
+  Infl[i, c(2)] <- Infl[i, c(2)] * Infl[i-1, c(2)]
+} ##Turns the inflation numbers into a cumulative index
+BusJourneys_PrivateCars_TramJourneys_MedPay_Years <- BusJourneys_PrivateCars_TramJourneys_MedPay[ , c(3)] ##Creates a dataframe which is just the year column from the main dataframe
+BusJourneys_PrivateCars_TramJourneys_MedPay_Years <- as.numeric(BusJourneys_PrivateCars_TramJourneys_MedPay_Years) ##Turns this year series dataframe into numbers
+for (i in 1:16){
+  BusJourneys_PrivateCars_TramJourneys_MedPay_Years[BusJourneys_PrivateCars_TramJourneys_MedPay_Years==(2009+i)]<-Infl[i, c(2)]
+} ##Systematically replaces in this dataframe 2010 with the first inflation index number, 2011 with the second inflation index number, 2012 with the third inflation index number etc.
+BusJourneys_PrivateCars_TramJourneys_RealPay <- data.frame(BusJourneys_PrivateCars_TramJourneys_MedPay, BusJourneys_PrivateCars_TramJourneys_MedPay_Years) ##Stitches this inflation index column onto the main dataframe 
+colnames(BusJourneys_PrivateCars_TramJourneys_RealPay)[colnames(BusJourneys_PrivateCars_TramJourneys_RealPay) == "BusJourneys_PrivateCars_TramJourneys_MedPay_Years"] <- "Inflation.Index" ##Renames the inflation index column accordingly
+BusJourneys_PrivateCars_TramJourneys_MedPay_MedPayOnly <- BusJourneys_PrivateCars_TramJourneys_MedPay[ , c(7)] ##Isolates the nominal wages column
+BusJourneys_PrivateCars_TramJourneys_RealPayOnly <- BusJourneys_PrivateCars_TramJourneys_MedPay_MedPayOnly/BusJourneys_PrivateCars_TramJourneys_MedPay_Years ##Creates a column vector equal to real wages, by dividing nominal wages by the inflation index
+BusJourneys_PrivateCars_TramJourneys_RealPay <- data.frame(BusJourneys_PrivateCars_TramJourneys_RealPay, BusJourneys_PrivateCars_TramJourneys_RealPayOnly) ##Stitches the real wages column onto the main dataframe
+colnames(BusJourneys_PrivateCars_TramJourneys_RealPay)[colnames(BusJourneys_PrivateCars_TramJourneys_RealPay) == "BusJourneys_PrivateCars_TramJourneys_RealPayOnly"] <- "Real.median.pay.in.each.region" ##Renames the real pay column accordingly
+#View(BusJourneys_PrivateCars_TramJourneys_RealPay)
 
+##**CREATING THE TREATMENT INDICATOR**
+Treatment <- as.vector(matrix(0, nrow=1408)) ##Creates a vector of zeros of length 1,408
+for (i in 1:1408){
+  if (BusJourneys_PrivateCars_TramJourneys_RealPay[i, c(2)]=="Greater Manchester CA" & (BusJourneys_PrivateCars_TramJourneys_RealPay[i, c(3)]=="2024" | BusJourneys_PrivateCars_TramJourneys_RealPay[i, c(3)]=="2025")){
+    Treatment[i] <- 1
+  }
+} ##Sets the treatment indicator to be equal to 1 only for the treatment units (i.e. Greater Manchester after 2024)
+BusJourneys_PrivateCars_TramJourneys_RealPay <- data.frame(BusJourneys_PrivateCars_TramJourneys_RealPay, Treatment) ##Stitches the treatment indicator vector onto the main dataset
+View(BusJourneys_PrivateCars_TramJourneys_RealPay)
+
+##**CREATING THE COVID INDICATOR**
+Covid <- as.vector(matrix(0, nrow=1408)) ##Creates a vector of zeros of length 1,408
+for (i in 1:1408){
+  if (BusJourneys_PrivateCars_TramJourneys_RealPay[i, c(3)]=="2021" | BusJourneys_PrivateCars_TramJourneys_RealPay[i, c(3)]=="2022"){
+    Covid[i] <- 1
+  }
+} ##Sets the covid indicator to be equal to 1 only when Year = 2021 or 2022
+BusJourneys_PrivateCars_TramJourneys_RealPay <- data.frame(BusJourneys_PrivateCars_TramJourneys_RealPay, Covid) ##Stitches the covid indicator vector onto the main dataset
+#View(BusJourneys_PrivateCars_TramJourneys_RealPay)
+
+##**CREATING THE LINEAR TIME TREND**
+BusJourneys_PrivateCars_TramJourneys_RealPay_Time <- BusJourneys_PrivateCars_TramJourneys_RealPay[ , c(3)] ##Creates a dataframe which is just the year column from the main dataframe
+BusJourneys_PrivateCars_TramJourneys_RealPay_Time <- as.numeric(BusJourneys_PrivateCars_TramJourneys_RealPay_Time) ##Turns this year series dataframe into numbers
+for (i in 1:16){
+  BusJourneys_PrivateCars_TramJourneys_RealPay_Time[BusJourneys_PrivateCars_TramJourneys_RealPay_Time==(2009+i)] <- i
+} ##In the created dataframe, this code replaces 2010 with 1, 2011 with 2, 2012 with 3 etc. 
+BusJourneys_PrivateCars_TramJourneys_RealPay <- data.frame(BusJourneys_PrivateCars_TramJourneys_RealPay, BusJourneys_PrivateCars_TramJourneys_RealPay_Time) ##Stitches this linear time trend vector onto the main dataframe
+colnames(BusJourneys_PrivateCars_TramJourneys_RealPay)[colnames(BusJourneys_PrivateCars_TramJourneys_RealPay) == "BusJourneys_PrivateCars_TramJourneys_RealPay_Time"] <- "t" ##Renames the linear time trend column accordingly
+View(BusJourneys_PrivateCars_TramJourneys_RealPay)
+
+##Next: Run the regressions
