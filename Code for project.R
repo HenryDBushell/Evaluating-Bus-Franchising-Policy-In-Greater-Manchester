@@ -270,7 +270,7 @@ BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys_Wes
 BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys[ , c(1:5, 8)] ##Deletes the columns we don't want/need
 BusJourneys_PrivateCars_TramJourneys <- BusJourneys_PrivateCars_TramJourneys[order(BusJourneys_PrivateCars_TramJourneys$`LA.or.Region`), ] ##Sorts the data alphabetically by name of local/combined authority
 rownames(BusJourneys_PrivateCars_TramJourneys) <- 1:nrow(BusJourneys_PrivateCars_TramJourneys) ##Resets the row names
-View(BusJourneys_PrivateCars_TramJourneys)
+#View(BusJourneys_PrivateCars_TramJourneys)
 
 ##**WRANGLING THE REAL MEDIAN INCOME DATA**
 #=> Starting with the 2010 data, I want to unify the local authorities included with the ones in my main dataframe. This will be the first step. 
@@ -538,3 +538,475 @@ BusJourneys_PrivateCars_TramJourneys_MedPay_2015 <- BusJourneys_PrivateCars_Tram
 #View(BusJourneys_PrivateCars_TramJourneys_MedPay_2015)
 
 #=> Now for 2016's income data
+if (file.exists('Sources of data/Income data/table82016revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/table82016revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/table82016revised")
+}
+MedPay_2016 = read_excel("Sources of data/Income data/table82016revised/Home Geography Table 8.7a   Annual pay - Gross 2016.xls", sheet = 2) 
+MedPay_2016 <- MedPay_2016[4:378, ]
+colnames(MedPay_2016) <- MedPay_2016[1, ] 
+MedPay_2016 <- MedPay_2016[6:375, ]
+MedPay_2016 <- MedPay_2016[, c(1,2,4)] 
+MedPay_2016$`Median` <- as.numeric(MedPay_2016$`Median`)
+MedPay_2016_E06 <- MedPay_2016 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2016_E10 <- MedPay_2016 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2016_E11 <- MedPay_2016 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2016_list <- list(MedPay_2016_E06, MedPay_2016_E10, MedPay_2016_E11) 
+MedPay_2016 <- MedPay_2016_list %>% reduce(full_join)
+MedPay_2016 <- MedPay_2016[order(MedPay_2016$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2016 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2016)
+
+MedPay_2016_Bournemouth <- MedPay_2016 %>%
+  dplyr::filter(`Description` == "Bournemouth") ##Creates a dataframe with just the Bournemouth data in
+MedPay_2016_Bournemouth <- MedPay_2016_Bournemouth[ , c(3)] 
+MedPay_2016_Poole <- MedPay_2016 %>%
+  dplyr::filter(`Description` == "Poole") ##Creates a dataframe with just the Poole data in
+MedPay_2016_Poole <- MedPay_2016_Poole[ , c(3)] 
+MedPay_2016_BournemouthPoole = (MedPay_2016_Bournemouth + MedPay_2016_Poole)/2
+MedPay_2016 <- MedPay_2016 %>%
+  dplyr::filter(`Description` != "Bournemouth" & `Description` != "Poole") ##Deletes the Bournemouth and Poole entries from the median pay dataset prior to the insertion of the combined Bournemouth and Poole row 
+MedPay_2016 <- MedPay_2016 %>% add_row(Description='Bournemouth and Poole', Code="E06000028", Median=MedPay_2016_BournemouthPoole[1,1]) 
+
+MedPay_2016[MedPay_2016=="County Durham"]<-"Durham" ##Renames the County Durham row to just Durham
+
+MedPay_2016 <- MedPay_2016[order(MedPay_2016$`Description`), ] 
+MedPay_2016 <- MedPay_2016[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2016 <- BusJourneys_PrivateCars_TramJourneys_2016[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2016 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2016, MedPay_2016) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2016 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2016[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2016 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2016[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2016)
+
+#=> Now for 2017's income data
+if (file.exists('Sources of data/Income data/table82017revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/table82017revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/table82017revised")
+}
+MedPay_2017 = read_excel("Sources of data/Income data/table82017revised/Home Geography Table 8.7a   Annual pay - Gross 2017.xls", sheet = 2) 
+MedPay_2017 <- MedPay_2017[4:378, ]
+colnames(MedPay_2017) <- MedPay_2017[1, ] 
+MedPay_2017 <- MedPay_2017[6:375, ]
+MedPay_2017 <- MedPay_2017[, c(1,2,4)] 
+MedPay_2017$`Median` <- as.numeric(MedPay_2017$`Median`)
+MedPay_2017_E06 <- MedPay_2017 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2017_E10 <- MedPay_2017 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2017_E11 <- MedPay_2017 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2017_list <- list(MedPay_2017_E06, MedPay_2017_E10, MedPay_2017_E11) 
+MedPay_2017 <- MedPay_2017_list %>% reduce(full_join)
+MedPay_2017 <- MedPay_2017[order(MedPay_2017$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2017 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2017)
+
+MedPay_2017_Bournemouth <- MedPay_2017 %>%
+  dplyr::filter(`Description` == "Bournemouth") 
+MedPay_2017_Bournemouth <- MedPay_2017_Bournemouth[ , c(3)] 
+MedPay_2017_Poole <- MedPay_2017 %>%
+  dplyr::filter(`Description` == "Poole") 
+MedPay_2017_Poole <- MedPay_2017_Poole[ , c(3)] 
+MedPay_2017_BournemouthPoole = (MedPay_2017_Bournemouth + MedPay_2017_Poole)/2
+MedPay_2017 <- MedPay_2017 %>%
+  dplyr::filter(`Description` != "Bournemouth" & `Description` != "Poole") 
+MedPay_2017 <- MedPay_2017 %>% add_row(Description='Bournemouth and Poole', Code="E06000028", Median=MedPay_2017_BournemouthPoole[1,1]) 
+
+MedPay_2017[MedPay_2017=="County Durham"]<-"Durham" 
+
+MedPay_2017 <- MedPay_2017[order(MedPay_2017$`Description`), ] 
+MedPay_2017 <- MedPay_2017[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2017 <- BusJourneys_PrivateCars_TramJourneys_2017[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2017 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2017, MedPay_2017) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2017 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2017[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2017 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2017[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2017)
+
+#=> Now for 2018's income data
+if (file.exists('Sources of data/Income data/table82018revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/table82018revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/table82018revised")
+}
+MedPay_2018 = read_excel("Sources of data/Income data/table82018revised/Home Geography Table 8.7a   Annual pay - Gross 2018.xls", sheet = 2) 
+MedPay_2018 <- MedPay_2018[4:368, ] ##Gets rid of the first few lines and of the Scottish/Welsh entries
+colnames(MedPay_2018) <- MedPay_2018[1, ] 
+MedPay_2018 <- MedPay_2018[6:365, ] ##Gets rid of a few more unneeded lines
+MedPay_2018 <- MedPay_2018[, c(1,2,4)] 
+MedPay_2018$`Median` <- as.numeric(MedPay_2018$`Median`)
+MedPay_2018_E06 <- MedPay_2018 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2018_E10 <- MedPay_2018 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2018_E11 <- MedPay_2018 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2018_list <- list(MedPay_2018_E06, MedPay_2018_E10, MedPay_2018_E11) 
+MedPay_2018 <- MedPay_2018_list %>% reduce(full_join)
+MedPay_2018 <- MedPay_2018[order(MedPay_2018$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2018 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2018)
+
+MedPay_2018[MedPay_2018=="County Durham"]<-"Durham" 
+
+MedPay_2018 <- MedPay_2018[order(MedPay_2018$`Description`), ] 
+MedPay_2018 <- MedPay_2018[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2018 <- BusJourneys_PrivateCars_TramJourneys_2018[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2018 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2018, MedPay_2018) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2018 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2018[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2018 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2018[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2018)
+
+#=> Now for 2019's income data
+if (file.exists('Sources of data/Income data/table82019revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/table82019revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/table82019revised")
+}
+MedPay_2019 = read_excel("Sources of data/Income data/table82019revised/Home Geography Table 8.7a   Annual pay - Gross 2019.xls", sheet = 2) 
+MedPay_2019 <- MedPay_2019[4:364, ] ##Gets rid of the first few lines and of the Scottish/Welsh entries
+colnames(MedPay_2019) <- MedPay_2019[1, ] 
+MedPay_2019 <- MedPay_2019[6:361, ] ##Gets rid of a few more unneeded lines
+MedPay_2019 <- MedPay_2019[, c(1,2,4)] 
+MedPay_2019$`Median` <- as.numeric(MedPay_2019$`Median`)
+MedPay_2019_E06 <- MedPay_2019 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2019_E10 <- MedPay_2019 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2019_E11 <- MedPay_2019 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2019_list <- list(MedPay_2019_E06, MedPay_2019_E10, MedPay_2019_E11) 
+MedPay_2019 <- MedPay_2019_list %>% reduce(full_join)
+MedPay_2019 <- MedPay_2019[order(MedPay_2019$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2019 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2019)
+
+MedPay_2019[MedPay_2019=="County Durham"]<-"Durham" 
+
+MedPay_2019 <- MedPay_2019[order(MedPay_2019$`Description`), ] 
+MedPay_2019 <- MedPay_2019[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2019 <- BusJourneys_PrivateCars_TramJourneys_2019[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2019 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2019, MedPay_2019) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2019 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2019[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2019 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2019[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2019)
+
+#=> Now for 2020's income data
+if (file.exists('Sources of data/Income data/table82020revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/table82020revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/table82020revised")
+}
+MedPay_2020 = read_excel("Sources of data/Income data/table82020revised/Home Geography Table 8.7a   Annual pay - Gross 2020.xls", sheet = 2) 
+MedPay_2020 <- MedPay_2020[4:358, ] ##Gets rid of the first few lines and of the Scottish/Welsh entries
+colnames(MedPay_2020) <- MedPay_2020[1, ] 
+MedPay_2020 <- MedPay_2020[6:355, ] ##Gets rid of a few more unneeded lines
+MedPay_2020 <- MedPay_2020[, c(1,2,4)] 
+MedPay_2020$`Median` <- as.numeric(MedPay_2020$`Median`)
+MedPay_2020_E06 <- MedPay_2020 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2020_E10 <- MedPay_2020 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2020_E11 <- MedPay_2020 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2020_list <- list(MedPay_2020_E06, MedPay_2020_E10, MedPay_2020_E11) 
+MedPay_2020 <- MedPay_2020_list %>% reduce(full_join)
+MedPay_2020 <- MedPay_2020[order(MedPay_2020$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2020 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2020)
+
+MedPay_2020[MedPay_2020=="County Durham UA"]<-"Durham" ##Renames County Durham UA to Durham in the medium pay data
+
+#=> From 2020 onwards in the median pay data, Northamptonshire is split into North Northamptonshire and West Northamptonshire (as we've seen before). So, as before, I am going to combine them into Northamptonshire. 
+MedPay_2020_North_Northamptonshire <- MedPay_2020 %>%
+  dplyr::filter(`Description` == "North Northamptonshire UA") ##Isolates the North Northamptonshire row of the medium pay data
+MedPay_2020_North_Northamptonshire <- MedPay_2020_North_Northamptonshire[ , c(3)] ##Selects specifically for the medium pay for North Northamptonshire
+MedPay_2020_West_Northamptonshire <- MedPay_2020 %>%
+  dplyr::filter(`Description` == "West Northamptonshire UA") 
+MedPay_2020_West_Northamptonshire <- MedPay_2020_West_Northamptonshire[ , c(3)] ##Does the same for West Northamptonshire
+MedPay_2020_Northamptonshire = (MedPay_2020_North_Northamptonshire + MedPay_2020_West_Northamptonshire)/2 ##The number of jobs in North Northamptonshire and West Northamptonshire is comparable, so to get an approximation for the median salary in Northamptonshire I am just going to take an average of North Northamptonshire's median salary and West Northamptonshire's Median salary
+MedPay_2020 <- MedPay_2020 %>%
+  dplyr::filter(`Description` != "North Northamptonshire UA" & `Description` != "West Northamptonshire UA") ##Removes the old North Northamptonshire and West Northamptonshire entries from the median pay data before the insertion of the new combined Northamptonshire entry
+MedPay_2020 <- MedPay_2020 %>% add_row(Description='Northamptonshire UA', Code="E10000021", Median=MedPay_2020_Northamptonshire[1,1]) ##Inserts the new combined Northamptonshire entry into the median pay data
+
+MedPay_2020 <- MedPay_2020[order(MedPay_2020$`Description`), ] 
+MedPay_2020 <- MedPay_2020[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2020 <- BusJourneys_PrivateCars_TramJourneys_2020[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2020 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2020, MedPay_2020) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2020 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2020[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2020 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2020[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2020)
+
+#=> Now for 2021's income data
+if (file.exists('Sources of data/Income data/ashetable82021revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/ashetable82021revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/ashetable82021revised")
+}
+MedPay_2021 = read_excel("Sources of data/Income data/ashetable82021revised/Home Geography Table 8.7a   Annual pay - Gross 2021.xls", sheet = 2) 
+MedPay_2021 <- MedPay_2021[4:358, ] 
+colnames(MedPay_2021) <- MedPay_2021[1, ] 
+MedPay_2021 <- MedPay_2021[6:355, ] 
+MedPay_2021 <- MedPay_2021[, c(1,2,4)] 
+MedPay_2021$`Median` <- as.numeric(MedPay_2021$`Median`)
+MedPay_2021_E06 <- MedPay_2021 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2021_E10 <- MedPay_2021 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2021_E11 <- MedPay_2021 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2021_list <- list(MedPay_2021_E06, MedPay_2021_E10, MedPay_2021_E11) 
+MedPay_2021 <- MedPay_2021_list %>% reduce(full_join)
+MedPay_2021 <- MedPay_2021[order(MedPay_2021$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2021 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2021)
+
+MedPay_2021[MedPay_2021=="County Durham UA"]<-"Durham"
+
+MedPay_2021_North_Northamptonshire <- MedPay_2021 %>%
+  dplyr::filter(`Description` == "North Northamptonshire UA") 
+MedPay_2021_North_Northamptonshire <- MedPay_2021_North_Northamptonshire[ , c(3)] 
+MedPay_2021_West_Northamptonshire <- MedPay_2021 %>%
+  dplyr::filter(`Description` == "West Northamptonshire UA") 
+MedPay_2021_West_Northamptonshire <- MedPay_2021_West_Northamptonshire[ , c(3)]
+MedPay_2021_Northamptonshire = (MedPay_2021_North_Northamptonshire + MedPay_2021_West_Northamptonshire)/2 
+MedPay_2021 <- MedPay_2021 %>%
+  dplyr::filter(`Description` != "North Northamptonshire UA" & `Description` != "West Northamptonshire UA") 
+MedPay_2021 <- MedPay_2021 %>% add_row(Description='Northamptonshire UA', Code="E10000021", Median=MedPay_2021_Northamptonshire[1,1])
+
+MedPay_2021 <- MedPay_2021[order(MedPay_2021$`Description`), ] 
+MedPay_2021 <- MedPay_2021[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2021 <- BusJourneys_PrivateCars_TramJourneys_2021[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2021 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2021, MedPay_2021) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2021 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2021[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2021 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2021[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2021)
+
+# => Now for 2022's income data
+if (file.exists('Sources of data/Income data/ashetable82022revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/ashetable82022revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/ashetable82022revised")
+}
+MedPay_2022 = read_excel("Sources of data/Income data/ashetable82022revised/For Publishing/Home Geography Table 8.7a   Annual pay - Gross 2022.xls", sheet = 2) 
+MedPay_2022 <- MedPay_2022[4:342, ] ##Gets rid of a few unneeded header rows and the Scottish/Welsh data
+colnames(MedPay_2022) <- MedPay_2022[1, ] 
+MedPay_2022 <- MedPay_2022[6:339, ] ##Gets rid of some more unneeded data
+MedPay_2022 <- MedPay_2022[, c(1,2,4)] 
+MedPay_2022$`Median` <- as.numeric(MedPay_2022$`Median`)
+MedPay_2022_E06 <- MedPay_2022 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2022_E10 <- MedPay_2022 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2022_E11 <- MedPay_2022 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2022_list <- list(MedPay_2022_E06, MedPay_2022_E10, MedPay_2022_E11) 
+MedPay_2022 <- MedPay_2022_list %>% reduce(full_join)
+MedPay_2022 <- MedPay_2022[order(MedPay_2022$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2022 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2022)
+
+MedPay_2022[MedPay_2022=="County Durham UA"]<-"Durham"
+
+MedPay_2022_North_Northamptonshire <- MedPay_2022 %>%
+  dplyr::filter(`Description` == "North Northamptonshire UA") 
+MedPay_2022_North_Northamptonshire <- MedPay_2022_North_Northamptonshire[ , c(3)] 
+MedPay_2022_West_Northamptonshire <- MedPay_2022 %>%
+  dplyr::filter(`Description` == "West Northamptonshire UA") 
+MedPay_2022_West_Northamptonshire <- MedPay_2022_West_Northamptonshire[ , c(3)]
+MedPay_2022_Northamptonshire = (MedPay_2022_North_Northamptonshire + MedPay_2022_West_Northamptonshire)/2 
+MedPay_2022 <- MedPay_2022 %>%
+  dplyr::filter(`Description` != "North Northamptonshire UA" & `Description` != "West Northamptonshire UA") 
+MedPay_2022 <- MedPay_2022 %>% add_row(Description='Northamptonshire UA', Code="E10000021", Median=MedPay_2022_Northamptonshire[1,1])
+
+#=> From 2022 onwards, Cumbria is split into 'Cumberland' and 'Westmorland and Furness', also as we've seen before. So, we're going to re-combine them into Cumbria, using the same process as above
+MedPay_2022_Cumberland <- MedPay_2022 %>%
+  dplyr::filter(`Description` == "Cumberland UA") ##Isolates just the Cumberland row from the median pay data
+MedPay_2022_Cumberland <- MedPay_2022_Cumberland[ , c(3)] ##Now just isolates the median salary data for Cumberland 
+MedPay_2022_Westmorland <- MedPay_2022 %>%
+  dplyr::filter(`Description` == "Westmorland and Furness UA") 
+MedPay_2022_Westmorland <- MedPay_2022_Westmorland[ , c(3)] ##Does the same for Westmorland and Furness 
+MedPay_2022_Cumbria = (MedPay_2022_Cumberland + MedPay_2022_Westmorland)/2 
+MedPay_2022 <- MedPay_2022 %>%
+  dplyr::filter(`Description` != "Cumberland UA" & `Description` != "Westmorland and Furness UA") 
+MedPay_2022 <- MedPay_2022 %>% add_row(Description='Cumbria', Code="E10000006", Median=MedPay_2022_Cumbria[1,1])
+
+MedPay_2022 <- MedPay_2022[order(MedPay_2022$`Description`), ] 
+MedPay_2022 <- MedPay_2022[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2022 <- BusJourneys_PrivateCars_TramJourneys_2022[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2022 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2022, MedPay_2022) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2022 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2022[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2022 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2022[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2022)
+
+#=> Now for 2023's income data
+if (file.exists('Sources of data/Income data/ashetable82023revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/ashetable82023revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/ashetable82023revised")
+}
+MedPay_2023 = read_excel("Sources of data/Income data/ashetable82023revised/Home Geography Table 8.7a   Annual pay - Gross 2023.xlsx", sheet = 2) 
+MedPay_2023 <- MedPay_2023[4:342, ] 
+colnames(MedPay_2023) <- MedPay_2023[1, ] 
+MedPay_2023 <- MedPay_2023[6:339, ] 
+MedPay_2023 <- MedPay_2023[, c(1,2,4)] 
+MedPay_2023$`Median` <- as.numeric(MedPay_2023$`Median`)
+MedPay_2023_E06 <- MedPay_2023 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2023_E10 <- MedPay_2023 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2023_E11 <- MedPay_2023 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2023_list <- list(MedPay_2023_E06, MedPay_2023_E10, MedPay_2023_E11) 
+MedPay_2023 <- MedPay_2023_list %>% reduce(full_join)
+MedPay_2023 <- MedPay_2023[order(MedPay_2023$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2023 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2023)
+
+MedPay_2023[MedPay_2023=="County Durham UA"]<-"Durham"
+
+MedPay_2023_North_Northamptonshire <- MedPay_2023 %>%
+  dplyr::filter(`Description` == "North Northamptonshire UA") 
+MedPay_2023_North_Northamptonshire <- MedPay_2023_North_Northamptonshire[ , c(3)] 
+MedPay_2023_West_Northamptonshire <- MedPay_2023 %>%
+  dplyr::filter(`Description` == "West Northamptonshire UA") 
+MedPay_2023_West_Northamptonshire <- MedPay_2023_West_Northamptonshire[ , c(3)]
+MedPay_2023_Northamptonshire = (MedPay_2023_North_Northamptonshire + MedPay_2023_West_Northamptonshire)/2 
+MedPay_2023 <- MedPay_2023 %>%
+  dplyr::filter(`Description` != "North Northamptonshire UA" & `Description` != "West Northamptonshire UA") 
+MedPay_2023 <- MedPay_2023 %>% add_row(Description='Northamptonshire UA', Code="E10000021", Median=MedPay_2023_Northamptonshire[1,1])
+
+MedPay_2023_Cumberland <- MedPay_2023 %>%
+  dplyr::filter(`Description` == "Cumberland UA") 
+MedPay_2023_Cumberland <- MedPay_2023_Cumberland[ , c(3)] 
+MedPay_2023_Westmorland <- MedPay_2023 %>%
+  dplyr::filter(`Description` == "Westmorland and Furness UA") 
+MedPay_2023_Westmorland <- MedPay_2023_Westmorland[ , c(3)]  
+MedPay_2023_Cumbria = (MedPay_2023_Cumberland + MedPay_2023_Westmorland)/2 
+MedPay_2023 <- MedPay_2023 %>%
+  dplyr::filter(`Description` != "Cumberland UA" & `Description` != "Westmorland and Furness UA") 
+MedPay_2023 <- MedPay_2023 %>% add_row(Description='Cumbria', Code="E10000006", Median=MedPay_2023_Cumbria[1,1])
+
+MedPay_2023 <- MedPay_2023[order(MedPay_2023$`Description`), ] 
+MedPay_2023 <- MedPay_2023[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2023 <- BusJourneys_PrivateCars_TramJourneys_2023[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2023 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2023, MedPay_2023) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2023 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2023[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2023 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2023[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2023)
+
+#=> Now for 2024's income data
+if (file.exists('Sources of data/Income data/ashetable82024revised') == FALSE) {
+  zip.file <- "Sources of data/Income data/ashetable82024revised.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/ashetable82024revised")
+}
+MedPay_2024 = read_excel("Sources of data/Income data/ashetable82024revised/Home Geography Table 8.7a   Annual pay - Gross 2024.xlsx", sheet = 2) 
+MedPay_2024 <- MedPay_2024[4:342, ] 
+colnames(MedPay_2024) <- MedPay_2024[1, ] 
+MedPay_2024 <- MedPay_2024[6:339, ] 
+MedPay_2024 <- MedPay_2024[, c(1,2,4)] 
+MedPay_2024$`Median` <- as.numeric(MedPay_2024$`Median`)
+MedPay_2024_E06 <- MedPay_2024 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2024_E10 <- MedPay_2024 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2024_E11 <- MedPay_2024 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2024_list <- list(MedPay_2024_E06, MedPay_2024_E10, MedPay_2024_E11) 
+MedPay_2024 <- MedPay_2024_list %>% reduce(full_join)
+MedPay_2024 <- MedPay_2024[order(MedPay_2024$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2024 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2024)
+
+MedPay_2024[MedPay_2024=="County Durham UA"]<-"Durham"
+
+MedPay_2024_North_Northamptonshire <- MedPay_2024 %>%
+  dplyr::filter(`Description` == "North Northamptonshire UA") 
+MedPay_2024_North_Northamptonshire <- MedPay_2024_North_Northamptonshire[ , c(3)] 
+MedPay_2024_West_Northamptonshire <- MedPay_2024 %>%
+  dplyr::filter(`Description` == "West Northamptonshire UA") 
+MedPay_2024_West_Northamptonshire <- MedPay_2024_West_Northamptonshire[ , c(3)]
+MedPay_2024_Northamptonshire = (MedPay_2024_North_Northamptonshire + MedPay_2024_West_Northamptonshire)/2 
+MedPay_2024 <- MedPay_2024 %>%
+  dplyr::filter(`Description` != "North Northamptonshire UA" & `Description` != "West Northamptonshire UA") 
+MedPay_2024 <- MedPay_2024 %>% add_row(Description='Northamptonshire UA', Code="E10000021", Median=MedPay_2024_Northamptonshire[1,1])
+
+MedPay_2024_Cumberland <- MedPay_2024 %>%
+  dplyr::filter(`Description` == "Cumberland UA") 
+MedPay_2024_Cumberland <- MedPay_2024_Cumberland[ , c(3)] 
+MedPay_2024_Westmorland <- MedPay_2024 %>%
+  dplyr::filter(`Description` == "Westmorland and Furness UA") 
+MedPay_2024_Westmorland <- MedPay_2024_Westmorland[ , c(3)]  
+MedPay_2024_Cumbria = (MedPay_2024_Cumberland + MedPay_2024_Westmorland)/2 
+MedPay_2024 <- MedPay_2024 %>%
+  dplyr::filter(`Description` != "Cumberland UA" & `Description` != "Westmorland and Furness UA") 
+MedPay_2024 <- MedPay_2024 %>% add_row(Description='Cumbria', Code="E10000006", Median=MedPay_2024_Cumbria[1,1])
+
+MedPay_2024 <- MedPay_2024[order(MedPay_2024$`Description`), ] 
+MedPay_2024 <- MedPay_2024[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2024 <- BusJourneys_PrivateCars_TramJourneys_2024[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2024 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2024, MedPay_2024) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2024 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2024[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2024 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2024[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2024)
+
+#=> Finally for 2025's income data
+if (file.exists('Sources of data/Income data/ashetable82025provisional') == FALSE) {
+  zip.file <- "Sources of data/Income data/ashetable82025provisional.zip"
+  unzip(zip.file, exdir = "Sources of data/Income data/ashetable82025provisional")
+}
+MedPay_2025 = read_excel("Sources of data/Income data/ashetable82025provisional/PROV - Home Geography Table 8.7a   Annual pay - Gross 2025.xlsx", sheet = 2) 
+MedPay_2025 <- MedPay_2025[4:342, ] 
+colnames(MedPay_2025) <- MedPay_2025[1, ] 
+MedPay_2025 <- MedPay_2025[6:339, ] 
+MedPay_2025 <- MedPay_2025[, c(1,2,4)] 
+MedPay_2025$`Median` <- as.numeric(MedPay_2025$`Median`)
+MedPay_2025_E06 <- MedPay_2025 %>%
+  filter(str_detect(`Code`, "^E06"))
+MedPay_2025_E10 <- MedPay_2025 %>%
+  filter(str_detect(`Code`, "^E10"))
+MedPay_2025_E11 <- MedPay_2025 %>%
+  filter(str_detect(`Code`, "^E11")) 
+MedPay_2025_list <- list(MedPay_2025_E06, MedPay_2025_E10, MedPay_2025_E11) 
+MedPay_2025 <- MedPay_2025_list %>% reduce(full_join)
+MedPay_2025 <- MedPay_2025[order(MedPay_2025$`Description`), ]
+BusJourneys_PrivateCars_TramJourneys_2025 <- BusJourneys_PrivateCars_TramJourneys %>%
+  dplyr::filter(`Year` == 2025)
+
+MedPay_2025[MedPay_2025=="County Durham UA"]<-"Durham"
+
+MedPay_2025_North_Northamptonshire <- MedPay_2025 %>%
+  dplyr::filter(`Description` == "North Northamptonshire UA") 
+MedPay_2025_North_Northamptonshire <- MedPay_2025_North_Northamptonshire[ , c(3)] 
+MedPay_2025_West_Northamptonshire <- MedPay_2025 %>%
+  dplyr::filter(`Description` == "West Northamptonshire UA") 
+MedPay_2025_West_Northamptonshire <- MedPay_2025_West_Northamptonshire[ , c(3)]
+MedPay_2025_Northamptonshire = (MedPay_2025_North_Northamptonshire + MedPay_2025_West_Northamptonshire)/2 
+MedPay_2025 <- MedPay_2025 %>%
+  dplyr::filter(`Description` != "North Northamptonshire UA" & `Description` != "West Northamptonshire UA") 
+MedPay_2025 <- MedPay_2025 %>% add_row(Description='Northamptonshire UA', Code="E10000021", Median=MedPay_2025_Northamptonshire[1,1])
+
+MedPay_2025_Cumberland <- MedPay_2025 %>%
+  dplyr::filter(`Description` == "Cumberland UA") 
+MedPay_2025_Cumberland <- MedPay_2025_Cumberland[ , c(3)] 
+MedPay_2025_Westmorland <- MedPay_2025 %>%
+  dplyr::filter(`Description` == "Westmorland and Furness UA") 
+MedPay_2025_Westmorland <- MedPay_2025_Westmorland[ , c(3)]  
+MedPay_2025_Cumbria = (MedPay_2025_Cumberland + MedPay_2025_Westmorland)/2 
+MedPay_2025 <- MedPay_2025 %>%
+  dplyr::filter(`Description` != "Cumberland UA" & `Description` != "Westmorland and Furness UA") 
+MedPay_2025 <- MedPay_2025 %>% add_row(Description='Cumbria', Code="E10000006", Median=MedPay_2025_Cumbria[1,1])
+
+MedPay_2025 <- MedPay_2025[order(MedPay_2025$`Description`), ] 
+MedPay_2025 <- MedPay_2025[1:100, ]
+BusJourneys_PrivateCars_TramJourneys_2025 <- BusJourneys_PrivateCars_TramJourneys_2025[1:100, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2025 <- data.frame(BusJourneys_PrivateCars_TramJourneys_2025, MedPay_2025) 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2025 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2025[1:88, ] 
+BusJourneys_PrivateCars_TramJourneys_MedPay_2025 <- BusJourneys_PrivateCars_TramJourneys_MedPay_2025[ , c(1:6, 9)]
+#View(BusJourneys_PrivateCars_TramJourneys_MedPay_2025)
+
+#=> Now I need to combine all of the individual above created dataframes for each year into one master dataframe
+BusJourneys_PrivateCars_TramJourneys_MedPay_list <- list(BusJourneys_PrivateCars_TramJourneys_MedPay_2010, BusJourneys_PrivateCars_TramJourneys_MedPay_2011, BusJourneys_PrivateCars_TramJourneys_MedPay_2012, BusJourneys_PrivateCars_TramJourneys_MedPay_2013, BusJourneys_PrivateCars_TramJourneys_MedPay_2014, BusJourneys_PrivateCars_TramJourneys_MedPay_2015, BusJourneys_PrivateCars_TramJourneys_MedPay_2016, BusJourneys_PrivateCars_TramJourneys_MedPay_2017, BusJourneys_PrivateCars_TramJourneys_MedPay_2018, BusJourneys_PrivateCars_TramJourneys_MedPay_2019, BusJourneys_PrivateCars_TramJourneys_MedPay_2020, BusJourneys_PrivateCars_TramJourneys_MedPay_2021, BusJourneys_PrivateCars_TramJourneys_MedPay_2022, BusJourneys_PrivateCars_TramJourneys_MedPay_2023, BusJourneys_PrivateCars_TramJourneys_MedPay_2024, BusJourneys_PrivateCars_TramJourneys_MedPay_2025) ##Creates a list of the 16 dataframes
+BusJourneys_PrivateCars_TramJourneys_MedPay <- BusJourneys_PrivateCars_TramJourneys_MedPay_list %>% reduce(full_join) ##Combines the list of the sixteen individual year dataframes into one new 'master' dataframe
+BusJourneys_PrivateCars_TramJourneys_MedPay <- BusJourneys_PrivateCars_TramJourneys_MedPay[order(BusJourneys_PrivateCars_TramJourneys_MedPay$`LA.or.Region`), ] ##Orders the data in alphabetical order once again 
+rownames(BusJourneys_PrivateCars_TramJourneys_MedPay) <- 1:nrow(BusJourneys_PrivateCars_TramJourneys_MedPay) ##Resets the row names
+colnames(BusJourneys_PrivateCars_TramJourneys_MedPay)[colnames(BusJourneys_PrivateCars_TramJourneys_MedPay) == "Median"] <- "Nominal.median.pay.in.each.region" ##Renames the column names to the first row of the data, which is the title row
+View(BusJourneys_PrivateCars_TramJourneys_MedPay)
+
+
