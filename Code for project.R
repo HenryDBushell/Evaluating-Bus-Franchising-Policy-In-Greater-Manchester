@@ -4,6 +4,7 @@
 ##install.packages("dplyr")
 ##install.packages("stringr")
 ##install.packages("readxl")
+##install.packages("micsr")
 
 pacman::p_load(
   tidyverse,
@@ -11,7 +12,8 @@ pacman::p_load(
   readODS,
   dplyr,
   stringr,
-  readxl
+  readxl,
+  micsr
 )
 
 ##**WRANGLING THE BUS JOURNEY DATA**
