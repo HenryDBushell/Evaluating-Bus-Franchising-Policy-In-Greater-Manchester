@@ -1,6 +1,6 @@
 # Evaluating-Bus-Franchising-Policy-In-Greater-Manchester
 
-**This project is still a work in progress. The data-wrangling code is long and messy, as I was coding in R for the first time and getting used to how to wrangle data in R. I am going to refine my code and make it clearer later on. HOWEVER, this code runs cleanly and reasonably quickly, presenting results for the user without any manual data wrangling needed**
+**This project is still a work in progress. The data-wrangling code is long and messy, as I was coding in R for the first time and getting used to how to wrangle data in R (whilst not using AI to write code or teach me how to code). I am going to refine my code and make it clearer later on. HOWEVER, this code runs cleanly and reasonably quickly, presenting results for the user without any manual data wrangling needed**
 
 This is a paper written in the second year of my BSc Economics course for the module ESPS0015 Political Economy. It uses DiD methods to evaluate the efficacy of Mayor Burnham's bus franchising policy on the number of bus journeys taken in Greater Manchester. 
 
