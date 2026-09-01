@@ -4,7 +4,9 @@
 ##install.packages("dplyr")
 ##install.packages("stringr")
 ##install.packages("readxl")
-##install.packages("micsr")
+##install.packages("plm")
+##install.packages("lmtest")
+##install.packages("writexl")
 
 pacman::p_load(
   tidyverse,
@@ -13,7 +15,9 @@ pacman::p_load(
   dplyr,
   stringr,
   readxl,
-  micsr
+  plm,
+  lmtest,
+  writexl
 )
 
 ##**WRANGLING THE BUS JOURNEY DATA**
@@ -1046,7 +1050,7 @@ for (i in 1:1408){
   }
 } ##Sets the treatment indicator to be equal to 1 only for the treatment units (i.e. Greater Manchester after 2024)
 BusJourneys_PrivateCars_TramJourneys_RealPay <- data.frame(BusJourneys_PrivateCars_TramJourneys_RealPay, Treatment) ##Stitches the treatment indicator vector onto the main dataset
-View(BusJourneys_PrivateCars_TramJourneys_RealPay)
+#View(BusJourneys_PrivateCars_TramJourneys_RealPay)
 
 ##**CREATING THE COVID INDICATOR**
 Covid <- as.vector(matrix(0, nrow=1408)) ##Creates a vector of zeros of length 1,408
@@ -1066,6 +1070,42 @@ for (i in 1:16){
 } ##In the created dataframe, this code replaces 2010 with 1, 2011 with 2, 2012 with 3 etc. 
 BusJourneys_PrivateCars_TramJourneys_RealPay <- data.frame(BusJourneys_PrivateCars_TramJourneys_RealPay, BusJourneys_PrivateCars_TramJourneys_RealPay_Time) ##Stitches this linear time trend vector onto the main dataframe
 colnames(BusJourneys_PrivateCars_TramJourneys_RealPay)[colnames(BusJourneys_PrivateCars_TramJourneys_RealPay) == "BusJourneys_PrivateCars_TramJourneys_RealPay_Time"] <- "t" ##Renames the linear time trend column accordingly
-View(BusJourneys_PrivateCars_TramJourneys_RealPay)
+#View(BusJourneys_PrivateCars_TramJourneys_RealPay)
 
-##Next: Run the regressions
+##**CREATING THE TIME DUMMIES**
+for (k in 1:16){
+  a <- as.vector(matrix(0, nrow=1408)) ##Creates a vector of zeros of length 1,408
+  for (i in 1:1408){
+    if (BusJourneys_PrivateCars_TramJourneys_RealPay[i, c(12)] == k){
+      a[i] <- 1
+    }
+  } ##Creates time dummies for t = 1, 2, 3, ..., 16
+  BusJourneys_PrivateCars_TramJourneys_RealPay <- data.frame(BusJourneys_PrivateCars_TramJourneys_RealPay, a) ##Stitches these time dummies onto the main dataframe
+}
+#View(BusJourneys_PrivateCars_TramJourneys_RealPay)
+
+##**RUNNING THE ECONOMETRIC MODELS**
+a <- plm(Bus.Journeys.Per.Capita.Per.Year ~ Treatment + a.1 + a.2 + a.3 + a.4 + a.5 + a.6 + a.7 + a.8 + a.9 + a.10 + a.11 + a.12 + a.13 + a.14 + a.15, 
+         data = BusJourneys_PrivateCars_TramJourneys_RealPay, index = c("LA.or.Region", "Year"), model = "pooling") ##This runs the first model outlined in the paper, pooled OLS with time dummies included
+summary(a) ##This prints the regression results
+coeftest(a, vcov=vcovHC(a, type="sss")) ##This prints the regression results with cluster- and heteroscedasticity-robust standard errors
+
+b <- plm(Bus.Journeys.Per.Capita.Per.Year ~ Treatment + Private.cars.licensed.in.each.region.in.each.year + Journeys.on.light.rail.trams.per.year + Real.median.pay.in.each.region + a.1 + a.2 + a.3 + a.4 + a.5 + a.6 + a.7 + a.8 + a.9 + a.10 + a.11 + a.12 + a.13 + a.14 + a.15, 
+         data = BusJourneys_PrivateCars_TramJourneys_RealPay, index = c("LA.or.Region", "Year"), model = "pooling") ##This runs the second model outlined in the paper, pooled OLS with time dummies and controls included
+summary(b)
+coeftest(b, vcov=vcovHC(b, type="sss")) ##This prints the regression results with cluster- and heteroscedasticity-robust standard errors
+
+c <- plm(Bus.Journeys.Per.Capita.Per.Year ~ Treatment + Private.cars.licensed.in.each.region.in.each.year + Journeys.on.light.rail.trams.per.year + Real.median.pay.in.each.region, 
+         data = BusJourneys_PrivateCars_TramJourneys_RealPay, index = c("LA.or.Region", "Year"), model = "within", effect = 'twoways') ##This runs the third model outlined in the paper, two-way fixed effects with controls included
+summary(c)
+coeftest(c, vcov=vcovHC(c, type="sss")) ##This prints the regression results with cluster- and heteroscedasticity-robust standard errors
+
+d <- plm(Bus.Journeys.Per.Capita.Per.Year ~ Treatment + Private.cars.licensed.in.each.region.in.each.year + Journeys.on.light.rail.trams.per.year + Real.median.pay.in.each.region + a.1 + a.2 + a.3 + a.4 + a.5 + a.6 + a.7 + a.8 + a.9 + a.10 + a.11 + a.12 + a.13 + a.14 + a.15, 
+         data = BusJourneys_PrivateCars_TramJourneys_RealPay, index = c("LA.or.Region", "Year"), model = "fd") ##This runs the fouth model outlined in the paper, first differencing with time dummies and controls included
+summary(d)
+coeftest(d, vcov=vcovHC(d, type="sss")) ##This prints the regression results with cluster- and heteroscedasticity-robust standard errors
+
+e <- plm(Bus.Journeys.Per.Capita.Per.Year ~ Treatment + Private.cars.licensed.in.each.region.in.each.year + Journeys.on.light.rail.trams.per.year + Real.median.pay.in.each.region + t + Covid, 
+         data = BusJourneys_PrivateCars_TramJourneys_RealPay, index = c("LA.or.Region", "Year"), model = "within") ##This runs the final model outlined in the paper, one-way fixed effects with a linear time trend/covid dummy and controls included
+summary(e)
+coeftest(e, vcov=vcovHC(e, type="sss")) ##This prints the regression results with cluster- and heteroscedasticity-robust standard errors
