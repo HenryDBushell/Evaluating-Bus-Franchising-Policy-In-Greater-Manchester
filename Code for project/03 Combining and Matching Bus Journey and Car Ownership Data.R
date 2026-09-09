@@ -4,37 +4,32 @@ source("Code for project/02 Wrangling the Car Ownership Data.R")
 PrivateCars <- PrivateCars[order(PrivateCars$`ONS Code`), ] ##Sorts the private car data alphabetically by ONS Code
 BusJourneys <- BusJourneys[order(BusJourneys$`Local Authority (LA) Code`), ] ##Sorts the bus journey data alphabetically by OLS code
 BusJourneys <- BusJourneys %>%
-  dplyr::filter(`LA or Region` != "Bournemouth" & `LA or Region` != "Poole") ##Filters out Bournemouth and Poole - there are no data for these entries and they are already accounted for in the 'Bournemouth, Chirstchuch and Poole' entry
+  filter(`LA or Region` != "Bournemouth" & `LA or Region` != "Poole") ##Filters out Bournemouth and Poole - there are no data for these entries and they are already accounted for in the 'Bournemouth, Chirstchuch and Poole' entry
 ##=>For some reason, the bus journeys dataset doesn't include any entries for the Isle of Scilly. So, I am going to add them to the dataset for completeness' sake. 
-ONS_Code_Scilly <- c("E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053")
-LA_or_Region_Scilly <- c("Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly")
-Year_Scilly <- c("2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025")
-Bus_Patronage_Scilly <- c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA) ##Creates four vectors each containing the elements needed for an Isle of Scilly dataframe to be added to the bus journeys data. 
-BusJourneys_Scilly <- data.frame(ONS_Code_Scilly, LA_or_Region_Scilly, Year_Scilly, Bus_Patronage_Scilly) ##Combines these four vectors into a dataframe
+BusJourneys_Scilly <- data.frame(`Local Authority (LA) Code` = c("E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053", "E06000053"), `LA or Region` = c("Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly", "Isles of Scilly"), Year = c("2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"), `Bus Journeys Per Capita Per Year` = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)) ##Creates an Isle of Scilly dataframe to be added to the main Bus Journeys dataframe
 colnames(BusJourneys_Scilly) <- c("Local Authority (LA) Code", "LA or Region", "Year", "Bus Journeys Per Capita Per Year") ##Renames the columns to match the BusJourneys dataframe
 BusJourneys_list_Scilly <- list(BusJourneys, BusJourneys_Scilly) ##Creates a list of the overall bus journey dataframe and the Scilly bus journey dataframe
 BusJourneys <- BusJourneys_list_Scilly %>% reduce(full_join) ##Combines the list into a completed dataframe so that the Isle of Scilly data is included into the BusJourneys data 
 #--
+
 #=> The bus journeys data includes the overarching Cumbria county data, while the car ownership data includes the separate combined authorities Cumberland, and Westmorland and Furness. So, in the private car ownership data we want to combine these two local authorities into one datapoint. 
-ONS_Code_Cumbria <- c("E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006")
-LA_or_Region_Cumbria <- c("Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria")
-Year_Cumbria <- c("2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025") ##We first set up the first three rows of the Cumbria dataframe
-PrivateCars_Cumberland <- PrivateCars %>%
-  dplyr::filter(`ONS Geography`== "Cumberland") ##Filters the private cars dataframe for only the Cumberland information
-Private_Car_Ownership_Cumberland = c(PrivateCars_Cumberland[ ,4]) ##Creates a vector which contains the private car ownership for Cumberland, by filtering for only the 4th column in the above 
+Private_Car_Ownership_Cumberland <- PrivateCars %>%
+  filter(`ONS Geography`== "Cumberland") %>% ##Filters the private cars dataframe for only the Cumberland information
+  select(`Private cars licensed in each region in each year`) ##Selects only specifically the private car ownership for Cumberland
 Private_Car_Ownership_Cumberland <- unlist(Private_Car_Ownership_Cumberland, use.names = FALSE) ##Converts the list into a straight vector so we can perform numerical operations with it
-PrivateCars_Westmorland <- PrivateCars %>%
-  dplyr::filter(`ONS Geography`== "Westmorland and Furness") 
-Private_Car_Ownership_Westmorland = c(PrivateCars_Westmorland[ ,4]) 
+Private_Car_Ownership_Westmorland <- PrivateCars %>%
+  filter(`ONS Geography`== "Westmorland and Furness") %>%
+  select(`Private cars licensed in each region in each year`)
 Private_Car_Ownership_Westmorland <- unlist(Private_Car_Ownership_Westmorland, use.names = FALSE) ##Does the same process for Westmorland
 Private_Car_Ownership_Cumbria = Private_Car_Ownership_Cumberland + Private_Car_Ownership_Westmorland ##Adds the private car ownership numbers together for Cumberland and Westmorland 
-PrivateCars_Cumbria <- data.frame(ONS_Code_Cumbria, LA_or_Region_Cumbria, Year_Cumbria, Private_Car_Ownership_Cumbria) ##Combines these four vectors into a dataframe
+PrivateCars_Cumbria <- data.frame(ONS_Code_Cumbria = c("E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006", "E10000006"), LA_or_Region_Cumbria = c("Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria", "Cumbria"), Year_Cumbria = c("2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"), Private_Car_Ownership_Cumbria) ##Combines these four vectors into a dataframe
 colnames(PrivateCars_Cumbria) <- c("ONS Code", "ONS Geography", "Year", "Private cars licensed in each region in each year") ##Renames the columns to match the PrivateCars dataframe
 PrivateCars_list_Cumbria <- list(PrivateCars, PrivateCars_Cumbria) ##Creates a list of the overall private cars dataframe and the Cumbria private cars dataframe
 PrivateCars <- PrivateCars_list_Cumbria %>% reduce(full_join) ##Combines the list into a completed dataframe so that the Cumbria data is included into the PrivateCars data 
 PrivateCars <- PrivateCars %>%
-  dplyr::filter(`ONS Geography` != "Cumberland" & `ONS Geography` != "Westmorland and Furness") ##Filters out Cumberland & Westmorland and Furness - these have now been replaced by Cumbria.
+  filter(`ONS Geography` != "Cumberland" & `ONS Geography` != "Westmorland and Furness") ##Filters out Cumberland & Westmorland and Furness - these have now been replaced by Cumbria.
 #- 
+##GOT UP TO HERE 9/9/26
 
 #=>Both datasets treat Northamptonshire funnily. The bus journeys dataset contains values for Northamptonshire up until 2021, and then from 2022-2025, it is split into North Northamptonshire and West Northamptonshire. The PrivateCars data, on the other hand, reports North and West Northamptonshire differently the entire time. We are going to combine into Northamptonshire for both datasets, as this is probably the most consistent way to deal with the problem. First, I will combine into Northamptonshire in the PrivateCars dataset. 
 PC_ONS_Code_Northamptonshire <- c("E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021", "E10000021")
