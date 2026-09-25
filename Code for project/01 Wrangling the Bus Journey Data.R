@@ -7,6 +7,7 @@
 ##install.packages("plm")
 ##install.packages("lmtest")
 ##install.packages("writexl")
+##install.packages("Synth")
 
 pacman::p_load(
   tidyverse,
@@ -17,7 +18,8 @@ pacman::p_load(
   readxl,
   plm,
   lmtest,
-  writexl
+  writexl,
+  Synth
 )
 
 ##**WRANGLING THE BUS JOURNEY DATA**
