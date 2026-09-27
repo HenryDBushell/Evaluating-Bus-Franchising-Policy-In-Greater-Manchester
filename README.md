@@ -2,9 +2,9 @@
 
 **The data wrangling code here isn't perfect and definitely could be shortened. I was coding in R for the first time and getting used to how to wrangle data in R (whilst not using AI to write code or teach me how to code). HOWEVER, this code runs cleanly and quickly, presenting results for the user without any manual data wrangling needed.**
 
-This is a paper written in the second year of my BSc Economics course for the module ESPS0015 Political Economy. It uses DiD methods to evaluate the efficacy of Mayor Burnham's bus franchising policy on the number of bus journeys taken in Greater Manchester. 
+This is a paper written in the second year of my BSc Economics course for the module ESPS0015 Political Economy. It uses DiD and SCM methods to evaluate the efficacy of Mayor Burnham's bus franchising policy on the number of bus journeys taken in Greater Manchester. 
 
-Data is sourced from the Department for Transport and the Office for National Statistics (please see the references in the paper for the specific pieces of data used), automatically wrangled into a clean panel data format using R (tidyverse), then 5 DiD models are run on this data (simple pooled OLS, pooled OLS with controls, TWFE with controls, first differencing with controls then one-way fixed effects with controls and a time trend). 
+Data is sourced from the Department for Transport and the Office for National Statistics (please see the references in the paper for the specific pieces of data used), automatically wrangled into a clean panel data format using R (tidyverse), then 5 DiD models are run on this data (simple pooled OLS, pooled OLS with controls, TWFE with controls, first differencing with controls then one-way fixed effects with controls and a time trend). Finally, some exploratory SCM analysis is carried out with the data. 
 
 All you should need to replicate the results of this project is: R Studio, as well as the data sources used (downloaded straight from here or from the government websites as referenced properly in the paper, as long as you replicate the structure of the "Sources of data" file as it appears in this repository). 
 
