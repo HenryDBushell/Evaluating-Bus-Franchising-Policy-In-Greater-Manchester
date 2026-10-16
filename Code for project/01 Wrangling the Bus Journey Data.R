@@ -1,14 +1,3 @@
-##install.packages("readODS")
-##install.packages("tidyverse")
-##install.packages("skimr")
-##install.packages("dplyr")
-##install.packages("stringr")
-##install.packages("readxl")
-##install.packages("plm")
-##install.packages("lmtest")
-##install.packages("writexl")
-##install.packages("Synth")
-
 pacman::p_load(
   tidyverse,
   skimr,
