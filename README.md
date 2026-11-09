@@ -8,4 +8,4 @@ Data is sourced from the Department for Transport and the Office for National St
 
 All you should need to replicate the results of this project is: R Studio, as well as the data sources used (downloaded straight from here or from the government websites as referenced properly in the paper, as long as you replicate the structure of the "Sources of data" file as it appears in this repository). 
 
-The paper is more of an proof-of-concept, with sufficient data not yet being available to evaluate the policy properly. The main aim of the paper is to use R and GitHub in a reproducible fashion as well as apply serious undergraduate-level econometrics to a novel research question. **The limits of the approach are discussed to a great extent in the appendix**.
+The paper is more of a proof-of-concept, with sufficient data not yet being available to evaluate the policy properly. The main aim of the paper is to use R and GitHub in a reproducible fashion as well as apply serious undergraduate-level econometrics to a novel research question. **The limits of the approach are discussed to a great extent in the appendix**.
